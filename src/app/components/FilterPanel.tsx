@@ -1,119 +1,157 @@
-import { Lang, t } from "../lib/i18n";
-import { Filters, WILAYAS, INSTITUTIONS } from "../lib/search";
-import { STREAM_LIST } from "../lib/streams";
-import { Label } from "./ui/label";
-import { Slider } from "./ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import { Button } from "./ui/button";
+import { ChangeEvent } from "react";
+import { Lang } from "../lib/i18n";
+import { programs } from "../data/programs";
 
-interface Props {
+export type BacStreamFilter =
+  | ""
+  | "sc-exp"
+  | "math"
+  | "tech-math"
+  | "letters-philo"
+  | "foreign-languages"
+  | "management-economy";
+
+type Filters = {
+  wilaya: string;
+  institution: string;
+  bacStream: BacStreamFilter;
+  minAvg?: number;
+  maxAvg?: number;
+  sort: "relevance" | "avgAsc" | "avgDesc";
+};
+
+type Props = {
   lang: Lang;
   filters: Filters;
-  onChange: (f: Filters) => void;
-}
+  onChange: (filters: Filters) => void;
+};
+
+const unique = (arr: string[]) =>
+  [...new Set(arr)]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+
+const wilayas = unique(programs.map((p) => p.wilaya));
+const institutions = unique(programs.map((p) => p.etb));
+
+const bacStreams = [
+  { value: "", ar: "كل الشعب", fr: "Toutes les séries" },
+  { value: "sc-exp", ar: "علوم تجريبية", fr: "Sciences expérimentales" },
+  { value: "math", ar: "رياضيات", fr: "Mathématiques" },
+  { value: "tech-math", ar: "تقني رياضي", fr: "Technique mathématique" },
+  { value: "letters-philo", ar: "آداب وفلسفة", fr: "Lettres et philosophie" },
+  { value: "foreign-languages", ar: "لغات أجنبية", fr: "Langues étrangères" },
+  { value: "management-economy", ar: "تسيير واقتصاد", fr: "Gestion et économie" },
+] as const;
 
 export function FilterPanel({ lang, filters, onChange }: Props) {
-  const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
-  const active =
-    !!filters.wilaya || !!filters.institution || !!filters.stream || filters.minAvg > 0;
+  const isAr = lang === "ar";
+
+  const update = <K extends keyof Filters>(key: K, value: Filters[K]) => {
+    onChange({ ...filters, [key]: value });
+  };
+
+  const handleNumber =
+    (key: "minAvg" | "maxAvg") => (e: ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value.trim();
+
+      if (raw === "") {
+        update(key, undefined as Filters[typeof key]);
+        return;
+      }
+
+      const parsed = Number(raw);
+      if (Number.isNaN(parsed)) return;
+
+      update(key, parsed as Filters[typeof key]);
+    };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label>{t(lang, "wilaya")}</Label>
-        <Select
-          value={filters.wilaya || "all"}
-          onValueChange={(v) => set({ wilaya: v === "all" ? "" : v })}
+    <div className="space-y-4">
+      <div>
+        <label className="mb-1 block text-sm font-medium">
+          {isAr ? "الولاية" : "Wilaya"}
+        </label>
+        <select
+          className="w-full rounded-md border border-border bg-background px-3 py-2"
+          value={filters.wilaya}
+          onChange={(e) => update("wilaya", e.target.value)}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t(lang, "allWilayas")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t(lang, "allWilayas")}</SelectItem>
-            {WILAYAS.map((w) => (
-              <SelectItem key={w} value={w}>
-                {w}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="">{isAr ? "كل الولايات" : "Toutes les wilayas"}</option>
+          {wilayas.map((w) => (
+            <option key={w} value={w}>
+              {w}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="space-y-2">
-        <Label>{t(lang, "stream")}</Label>
-        <Select
-          value={filters.stream || "all"}
-          onValueChange={(v) => set({ stream: v === "all" ? "" : v })}
+      <div>
+        <label className="mb-1 block text-sm font-medium">
+          {isAr ? "المؤسسة" : "Établissement"}
+        </label>
+        <select
+          className="w-full rounded-md border border-border bg-background px-3 py-2"
+          value={filters.institution}
+          onChange={(e) => update("institution", e.target.value)}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t(lang, "allStreams")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t(lang, "allStreams")}</SelectItem>
-            {STREAM_LIST.map((s) => (
-              <SelectItem key={s.code} value={s.code}>
-                {lang === "ar" ? s.ar : s.fr}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="">{isAr ? "كل المؤسسات" : "Tous les établissements"}</option>
+          {institutions.map((etb) => (
+            <option key={etb} value={etb}>
+              {etb}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="space-y-2">
-        <Label>{t(lang, "institution")}</Label>
-        <Select
-          value={filters.institution || "all"}
-          onValueChange={(v) => set({ institution: v === "all" ? "" : v })}
+      <div>
+        <label className="mb-1 block text-sm font-medium">
+          {isAr ? "شعبة البكالوريا" : "Série du bac"}
+        </label>
+        <select
+          className="w-full rounded-md border border-border bg-background px-3 py-2"
+          value={filters.bacStream}
+          onChange={(e) => update("bacStream", e.target.value as BacStreamFilter)}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t(lang, "allInstitutions")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t(lang, "allInstitutions")}</SelectItem>
-            {INSTITUTIONS.map((i) => (
-              <SelectItem key={i} value={i}>
-                {i}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {bacStreams.map((s) => (
+            <option key={s.value} value={s.value}>
+              {isAr ? s.ar : s.fr}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>{t(lang, "minAverage")}</Label>
-          <span className="tabular-nums text-sm text-primary">
-            {filters.minAvg > 0 ? `≥ ${filters.minAvg.toFixed(1)}` : "—"}
-          </span>
-        </div>
-        <Slider
-          min={0}
-          max={18}
-          step={0.5}
-          value={[filters.minAvg]}
-          onValueChange={([v]) => set({ minAvg: v })}
+      <div>
+        <label className="mb-1 block text-sm font-medium">
+          {isAr ? "المعدل الأدنى" : "Moyenne minimale"}
+        </label>
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          className="w-full rounded-md border border-border bg-background px-3 py-2"
+          value={filters.minAvg ?? ""}
+          onChange={handleNumber("minAvg")}
+          placeholder={isAr ? "مثال 12" : "Ex: 12"}
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>10</span>
-          <span>18</span>
-        </div>
       </div>
 
-      {active && (
-        <Button
-          variant="ghost"
-          className="w-full text-muted-foreground"
-          onClick={() => set({ wilaya: "", institution: "", stream: "", minAvg: 0 })}
-        >
-          {t(lang, "clearFilters")}
-        </Button>
-      )}
+      <div>
+        <label className="mb-1 block text-sm font-medium">
+          {isAr ? "المعدل الأقصى" : "Moyenne maximale"}
+        </label>
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          className="w-full rounded-md border border-border bg-background px-3 py-2"
+          value={filters.maxAvg ?? ""}
+          onChange={handleNumber("maxAvg")}
+          placeholder={isAr ? "مثال 15" : "Ex: 15"}
+        />
+      </div>
     </div>
   );
 }
