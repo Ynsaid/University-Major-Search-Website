@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "./components/ui/select";
 
-const EXAMPLES = ["Informatique", "طب", "Architecture", "Langue anglaise", "الغة وادب عربي"];
+const EXAMPLES = ["Informatique", "طب", "Architecture", "Langue anglaise", "لغة وادب عربي"];
 const PAGE = 40;
 
 export default function App() {
