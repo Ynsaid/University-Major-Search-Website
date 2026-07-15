@@ -20,10 +20,11 @@ export function normalize(input: string): string {
 }
 
 export interface Filters {
-  wilaya: string; // "" = all
-  institution: string; // "" = all
-  stream: string; // "" = all — StreamCode
-  minAvg: number; // 0..20 lower bound on cutoff
+  wilaya: string;
+  institution: string;
+  stream: string;
+  minAvg: number;
+  maxAvg?: number;
   sort: "relevance" | "avgAsc" | "avgDesc";
 }
 
@@ -228,3 +229,17 @@ export const INSTITUTIONS = Array.from(
 ).sort();
 
 export const TOTAL = programs.length;
+
+
+
+export function isAverageQuery(value: string): boolean {
+  const trimmed = value.trim().replace(",", ".");
+  if (trimmed === "") return false;
+  if (!/^\d{1,2}(\.\d{1,2})?$/.test(trimmed)) return false;
+  const num = parseFloat(trimmed);
+  return !isNaN(num) && num >= 0 && num <= 20;
+}
+
+export function parseAverage(value: string): number {
+  return parseFloat(value.trim().replace(",", "."));
+}
