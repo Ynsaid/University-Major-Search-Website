@@ -43,7 +43,7 @@ export function Header({ lang, onLangChange, dark, onToggleDark, onLogoClick, co
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {l === "fr" ? "FR" : "ع"}
+                {l === "fr" ? "Francais" : "العربية"}
               </button>
             ))}
           </div>
