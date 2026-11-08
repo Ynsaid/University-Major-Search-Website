@@ -39,7 +39,7 @@ npm -v
 ### Installation
 
 ```bash
-git clone [https://github.com/Ynsaid/University-Major-Search-Website.git](https://github.com/Ynsaid/University-Major-Search-Website.git)
+git clone https://github.com/Ynsaid/University-Major-Search-Website.git
 cd University-Major-Search-Website
 npm install
 ```
